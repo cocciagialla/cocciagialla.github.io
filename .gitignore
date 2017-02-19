@@ -6,3 +6,6 @@
 /output_*/
 /source/components/
 s3.conf
+.idea/
+/gh-pages-deployment
+/vendor/

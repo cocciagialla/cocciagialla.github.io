@@ -1,13 +1,20 @@
 #!/bin/bash
+echo Deploy production site
 
-# Replace "sculpin generate" with "php sculpin.phar generate" if sculpin.phar
-# was downloaded and placed in this directory instead of sculpin having been
-# installed globally.
+./clean.sh
 
-sculpin generate --env=prod
-if [ $? -ne 0 ]; then echo "Could not generate the site"; exit 1; fi
+./vendor/bin/sculpin generate --env=prod
 
-# Add --delete right before "output_prod" to have rsync remove files that are
-# deleted locally from the destination too. See README.md for an example.
-rsync -avze 'ssh -p 4668' output_prod/ username@yoursculpinsite:public_html
-if [ $? -ne 0 ]; then echo "Could not publish the site"; exit 1; fi
+find ./output_prod/ -name ".git" -exec rm -rf {} \;
+
+rm -rf ./gh-pages-deployment
+git clone git@github.com:cocciagialla/cocciagialla.github.io.git ./gh-pages-deployment
+cd gh-pages-deployment
+git checkout master
+
+rsync --quiet --archive --filter="P .git*" --exclude=".*.sw*" --exclude=".*.un~" --delete ../output_prod/ ./
+git add -A :/
+git commit -a -m "Deploying sculpin-generated pages to \`master\` branch"
+git push origin master
+
+echo done!
